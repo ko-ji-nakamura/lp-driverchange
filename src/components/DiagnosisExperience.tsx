@@ -1,16 +1,22 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import {
   ArrowLeft,
+  BriefcaseBusiness,
+  CalendarDays,
+  Check,
   CheckCircle2,
   ChevronRight,
-  ClipboardCheck,
+  ClipboardList,
+  Headphones,
+  LockKeyhole,
   PhoneCall,
   ShieldCheck,
-  Sparkles,
   Truck,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { config } from "@/config/lp";
 
@@ -23,8 +29,9 @@ type AnswerOption = {
 
 type Question = {
   id: QuestionId;
+  q: string;
   title: string;
-  helper: string;
+  lead: string;
   options: AnswerOption[];
 };
 
@@ -33,19 +40,21 @@ type Answers = Partial<Record<QuestionId, string>>;
 const questions: Question[] = [
   {
     id: "workStyle",
-    title: "希望する働き方を選んでください",
-    helper: "今の希望に一番近いものを選んでください。",
+    q: "Q1",
+    title: "現在の働き方について、最も近いものはどれですか？",
+    lead: "あなたの状況に近いものを1つ選んでください",
     options: [
-      { label: "正社員", icon: "🏢" },
-      { label: "アルバイト", icon: "🕒" },
-      { label: "業務委託", icon: "🚚" },
-      { label: "まだ決まっていない", icon: "💬" },
+      { label: "正社員として安定して働いている", icon: "🏢" },
+      { label: "契約社員・派遣などで働いている", icon: "🗓️" },
+      { label: "現在、ドライバーとして働いている", icon: "🚚" },
+      { label: "現在は働いていない／転職を考えている", icon: "🔍" },
     ],
   },
   {
     id: "license",
+    q: "Q2",
     title: "お持ちの免許を選んでください",
-    helper: "該当する免許が複数ある場合は、上位のものを選んでください。",
+    lead: "該当する免許が複数ある場合は、上位のものを選んでください",
     options: [
       { label: "普通免許", icon: "🚗" },
       { label: "準中型免許", icon: "🚙" },
@@ -57,8 +66,9 @@ const questions: Question[] = [
   },
   {
     id: "area",
+    q: "Q3",
     title: "希望する勤務地を選んでください",
-    helper: "通いやすいエリアを中心に確認します。",
+    lead: "通いやすいエリアを中心に求人を確認します",
     options: [
       { label: "千葉県内", icon: "📍" },
       { label: "東京都内", icon: "🗼" },
@@ -69,8 +79,9 @@ const questions: Question[] = [
   },
   {
     id: "timing",
+    q: "Q4",
     title: "転職希望時期を選んでください",
-    helper: "未定でも大丈夫です。状況に合わせて相談できます。",
+    lead: "未定でも大丈夫です。状況に合わせて相談できます",
     options: [
       { label: "すぐに", icon: "⚡" },
       { label: "1ヶ月以内", icon: "📅" },
@@ -80,8 +91,9 @@ const questions: Question[] = [
   },
   {
     id: "priority",
+    q: "Q5",
     title: "転職で重視したいことを選んでください",
-    helper: "求人確認時に優先したい条件を教えてください。",
+    lead: "求人確認時に優先したい条件を教えてください",
     options: [
       { label: "給与を上げたい", icon: "💰" },
       { label: "休みを増やしたい", icon: "🌙" },
@@ -92,7 +104,11 @@ const questions: Question[] = [
   },
 ];
 
-const trustBadges = ["完全無料", "在職中OK", "未経験歓迎求人あり"];
+const heroBadges = [
+  { title: "未経験OK", text: "安心サポート", icon: BriefcaseBusiness },
+  { title: "高収入求人", text: "多数ご紹介", icon: Wallet },
+  { title: "日勤・土日休みなど", text: "働きやすさ重視", icon: CalendarDays },
+];
 
 function scrollToElement(target: HTMLElement | null) {
   target?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -105,19 +121,16 @@ export function DiagnosisExperience() {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [contact, setContact] = useState({ name: "", phone: "" });
   const [phoneError, setPhoneError] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const isQuestionStep = currentStep < questions.length;
-  const activeQuestion = questions[currentStep];
-  const progress = isQuestionStep ? ((currentStep + 1) / questions.length) * 100 : 100;
-  const fixedCtaLabel = isQuestionStep
-    ? currentStep === 0
-      ? config.mainCta
-      : "診断に戻る"
-    : "診断結果を受け取る";
+  const questionIndex = currentStep - 1;
+  const activeQuestion = questions[questionIndex];
+  const isQuestionStep = currentStep >= 1 && currentStep <= questions.length;
+  const isContactStep = currentStep === questions.length + 1;
+  const isThanksStep = currentStep === questions.length + 2;
 
   function startDiagnosis() {
-    scrollToElement(diagnosisRef.current);
+    setCurrentStep(1);
+    window.setTimeout(() => scrollToElement(diagnosisRef.current), 0);
   }
 
   function handleAnswer(question: Question, option: AnswerOption) {
@@ -132,18 +145,24 @@ export function DiagnosisExperience() {
     setIsAdvancing(true);
 
     window.setTimeout(() => {
-      setCurrentStep((step) => Math.min(step + 1, questions.length));
+      setCurrentStep((step) => (step >= questions.length ? questions.length + 1 : step + 1));
       setIsAdvancing(false);
     }, 220);
   }
 
   function handleBack() {
-    setCurrentStep((step) => Math.max(step - 1, 0));
     setPhoneError("");
+    setCurrentStep((step) => Math.max(step - 1, 0));
+    window.setTimeout(() => scrollToElement(stepTarget()), 0);
+  }
+
+  function stepTarget() {
+    return currentStep <= 1 ? null : diagnosisRef.current;
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const trimmedName = contact.name.trim();
     const normalizedPhone = contact.phone.replace(/[^\d]/g, "");
 
@@ -164,92 +183,34 @@ export function DiagnosisExperience() {
 
     console.log("ドラチェン診断回答", payload);
     setPhoneError("");
-    setIsSubmitted(true);
+    setCurrentStep(questions.length + 2);
     window.setTimeout(() => scrollToElement(diagnosisRef.current), 0);
   }
 
   return (
-    <>
-      <main className="relative mx-auto min-h-screen max-w-[460px] overflow-hidden bg-blue-950 text-slate-950 shadow-soft">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(125,211,252,0.45),transparent_42%),linear-gradient(160deg,#061a46_0%,#0a4f93_48%,#11a4d7_100%)]" />
-          <div className="absolute left-0 right-0 top-20 h-36 -skew-y-6 bg-white/10" />
-          <div className="absolute inset-x-4 top-28 h-32 rounded-lg border border-white/15 bg-white/5" />
-          <div className="absolute inset-0 opacity-35 [background-image:radial-gradient(rgba(255,255,255,0.48)_1px,transparent_1px)] [background-size:16px_16px]" />
-          <div className="absolute -bottom-10 left-0 h-36 w-full bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.16)_50%,transparent_100%)]" />
-        </div>
+    <main className="relative mx-auto min-h-screen max-w-[460px] overflow-hidden bg-blue-950 text-slate-950 shadow-soft">
+      <BackgroundDecor />
 
-        <section className="relative px-5 pb-3 pt-5 text-white">
-          <header className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-blue-800 shadow-[0_14px_30px_rgba(2,6,23,0.24)]">
-                <Truck className="h-6 w-6" aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-2xl font-black leading-none">{config.serviceName}</p>
-                <p className="mt-1 text-xs font-bold text-cyan-100">ドライバー転職サポート</p>
-              </div>
-            </div>
-            <span className="rounded-lg bg-white/15 px-3 py-2 text-xs font-black text-white ring-1 ring-white/25">
-              30秒診断
-            </span>
-          </header>
+      {currentStep === 0 ? <HeroScreen onStart={startDiagnosis} /> : null}
 
-          <div className="mt-6">
-            <p className="inline-flex items-center gap-1 rounded-lg bg-yellow-300 px-3 py-1 text-xs font-black text-blue-950 shadow-[0_10px_22px_rgba(250,204,21,0.28)]">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              希望条件をすぐチェック
-            </p>
-            <h1 className="mt-3 text-[2.25rem] font-black leading-[1.08]">
-              ドライバー転職なら
-              <br />
-              ドラチェン
-            </h1>
-            <p className="mt-3 text-base font-bold leading-7 text-cyan-50">{config.subCta}</p>
-          </div>
+      {currentStep > 0 ? (
+        <section ref={diagnosisRef} id="diagnosis" className="relative px-5 pb-8 pt-7">
+          {!isThanksStep ? <ScreenHeader currentStep={Math.min(currentStep, questions.length)} /> : null}
 
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {trustBadges.map((badge) => (
-              <div
-                key={badge}
-                className="rounded-lg bg-white px-2 py-2.5 text-center text-[12px] font-black leading-5 text-blue-900 shadow-[0_12px_28px_rgba(2,6,23,0.18)]"
-              >
-                <CheckCircle2 className="mx-auto mb-1 h-4 w-4 text-emerald-500" aria-hidden="true" />
-                {badge}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section ref={diagnosisRef} id="diagnosis" className="relative px-4 pb-8 pt-2">
-          <div className="mb-3 rounded-lg border border-white/20 bg-white/12 p-3 text-white shadow-[0_14px_32px_rgba(2,6,23,0.2)] backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-yellow-200" aria-hidden="true" />
-                <p className="text-sm font-black">5問で条件チェック</p>
-              </div>
-              <p className="text-xs font-bold text-cyan-100">完全無料</p>
-            </div>
-          </div>
-
-          {isSubmitted ? (
-            <ThanksCard />
-          ) : isQuestionStep ? (
-            <QuestionCard
+          {isQuestionStep ? (
+            <QuestionScreen
               key={activeQuestion.id}
               question={activeQuestion}
-              questionNumber={currentStep + 1}
-              totalQuestions={questions.length}
-              progress={progress}
-              selectedAnswer={answers[activeQuestion.id]}
+              step={currentStep}
+              answers={answers}
               isAdvancing={isAdvancing}
-              canGoBack={currentStep > 0}
-              onBack={handleBack}
               onAnswer={handleAnswer}
+              onBack={handleBack}
             />
-          ) : (
-            <ContactCard
-              progress={progress}
+          ) : null}
+
+          {isContactStep ? (
+            <ContactScreen
               contact={contact}
               phoneError={phoneError}
               onBack={handleBack}
@@ -257,100 +218,334 @@ export function DiagnosisExperience() {
               onPhoneChange={() => setPhoneError("")}
               onSubmit={handleSubmit}
             />
-          )}
+          ) : null}
+
+          {isThanksStep ? <ThanksScreen /> : null}
         </section>
-
-        <CompactFooter />
-      </main>
-
-      {!isSubmitted ? (
-        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(12px+env(safe-area-inset-bottom))]">
-          <div className="mx-auto max-w-[460px] rounded-lg bg-white/95 p-2 shadow-[0_-16px_36px_rgba(15,23,42,0.2)] backdrop-blur">
-            <button
-              type="button"
-              onClick={startDiagnosis}
-              className="cta-float inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-300 px-5 text-base font-black text-blue-950 shadow-[0_12px_30px_rgba(249,115,22,0.32)] active:translate-y-0.5"
-            >
-              {fixedCtaLabel}
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
       ) : null}
-    </>
+
+      <CompactFooter />
+    </main>
   );
 }
 
-function QuestionCard({
-  question,
-  questionNumber,
-  totalQuestions,
-  progress,
-  selectedAnswer,
-  isAdvancing,
-  canGoBack,
-  onBack,
-  onAnswer,
-}: {
-  question: Question;
-  questionNumber: number;
-  totalQuestions: number;
-  progress: number;
-  selectedAnswer?: string;
-  isAdvancing: boolean;
-  canGoBack: boolean;
-  onBack: () => void;
-  onAnswer: (question: Question, option: AnswerOption) => void;
-}) {
+function BackgroundDecor() {
   return (
-    <article className="card-in rounded-lg bg-white p-5 shadow-[0_22px_50px_rgba(2,6,23,0.26)]">
-      <CardHeader
-        label={`Q${questionNumber}`}
-        count={`${questionNumber}/${totalQuestions}`}
-        progress={progress}
-      />
-      <h2 className="mt-5 text-[1.55rem] font-black leading-snug text-slate-950">
-        {question.title}
-      </h2>
-      <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{question.helper}</p>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_8%,rgba(125,211,252,0.48),transparent_36%),linear-gradient(150deg,#031a52_0%,#063f99_45%,#0b9be8_100%)]" />
+      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,0.42)_1px,transparent_1px)] [background-size:14px_14px]" />
+      <div className="absolute right-[-120px] top-16 h-20 w-[520px] rotate-[-44deg] bg-cyan-300/20 blur-sm" />
+      <div className="absolute right-[-90px] top-0 h-10 w-[420px] rotate-[-44deg] bg-white/20 blur-sm" />
+      <div className="absolute bottom-64 left-[-120px] h-16 w-[460px] rotate-[-28deg] bg-cyan-300/14" />
+      <div className="absolute left-5 top-36 text-xl text-white/90">✦</div>
+      <div className="absolute right-8 top-28 text-lg text-yellow-300">◆</div>
+      <div className="absolute right-12 top-64 text-2xl text-white">✦</div>
+      <div className="absolute left-8 top-72 text-sm text-yellow-200">◆</div>
+    </div>
+  );
+}
 
-      <div className="mt-5 space-y-3">
-        {question.options.map((option) => {
-          const isSelected = selectedAnswer === option.label;
+function LogoMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="flex items-center gap-2 text-white">
+      <span
+        className={[
+          "flex shrink-0 items-center justify-center rounded-md border-2 border-white text-white",
+          compact ? "h-9 w-10" : "h-11 w-12",
+        ].join(" ")}
+      >
+        <Truck className={compact ? "h-6 w-6" : "h-7 w-7"} aria-hidden="true" />
+      </span>
+      <div>
+        <p className={compact ? "text-2xl font-black leading-none" : "text-4xl font-black leading-none"}>
+          {config.serviceName}
+        </p>
+        <p className="mt-1 text-xs font-black text-white">ドライバー転職チェンジ</p>
+      </div>
+    </div>
+  );
+}
+
+function FreeBadge({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={[
+        "relative overflow-hidden rounded-lg border border-yellow-300 bg-gradient-to-br from-white via-amber-50 to-yellow-100 text-blue-950 shadow-[0_14px_24px_rgba(2,6,23,0.24)]",
+        compact ? "px-3 py-2" : "px-4 py-3",
+      ].join(" ")}
+    >
+      <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-200" />
+      <div className="flex items-center gap-2">
+        <ShieldCheck className={compact ? "h-5 w-5 text-blue-700" : "h-6 w-6 text-blue-700"} aria-hidden="true" />
+        <div>
+          <p className={compact ? "text-lg font-black leading-none" : "text-2xl font-black leading-none"}>完全無料</p>
+          <p className="mt-1 text-sm font-black text-orange-500">1分で完了！</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroScreen({ onStart }: { onStart: () => void }) {
+  return (
+    <section className="relative px-5 pb-7 pt-6 text-white">
+      <div className="flex items-start justify-between gap-3">
+        <LogoMark />
+        <div className="hidden min-[390px]:block">
+          <FreeBadge compact />
+        </div>
+      </div>
+
+      <div className="mt-7 grid grid-cols-[1fr_auto] items-start gap-3">
+        <div className="relative rounded-lg bg-white px-4 py-3 text-blue-950 shadow-[0_14px_28px_rgba(2,6,23,0.26)]">
+          <div className="absolute -bottom-3 left-12 h-6 w-6 rotate-45 bg-white" />
+          <p className="relative text-xl font-black">
+            <span className="text-4xl text-orange-500">5</span>つの質問でわかる！
+          </p>
+        </div>
+        <div className="min-[390px]:hidden">
+          <FreeBadge compact />
+        </div>
+      </div>
+
+      <div className="relative mt-7">
+        <p className="text-[2.1rem] font-black leading-[1.05] text-white drop-shadow-[0_5px_0_rgba(2,24,87,0.55)]">
+          あなたにピッタリの
+        </p>
+        <h1 className="mt-1 text-[4.1rem] font-black leading-[0.95] text-yellow-300 drop-shadow-[0_8px_0_rgba(2,24,87,0.55)]">
+          ドライバー
+        </h1>
+        <p className="mt-2 text-[3.4rem] font-black leading-none text-white drop-shadow-[0_8px_0_rgba(2,24,87,0.55)]">
+          求人診断
+        </p>
+      </div>
+
+      <HeroIllustration />
+
+      <div className="relative z-10 mt-3 grid grid-cols-3 gap-2">
+        {heroBadges.map(({ title, text, icon: Icon }) => (
+          <div
+            key={title}
+            className="rounded-full border-4 border-yellow-400 bg-white px-2 py-3 text-center text-blue-950 shadow-[0_14px_24px_rgba(2,6,23,0.25)]"
+          >
+            <Icon className="mx-auto h-8 w-8 text-blue-700" aria-hidden="true" />
+            <p className="mt-2 text-sm font-black leading-5">{title}</p>
+            <p className="mt-1 text-[11px] font-black leading-4 text-blue-800">{text}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="relative z-10 mt-6 rounded-lg bg-white p-5 text-center shadow-[0_20px_44px_rgba(2,6,23,0.28)]">
+        <p className="text-2xl font-black text-blue-950">
+          ＼ かんたん<span className="text-4xl text-orange-500">1分</span>で完了！ ／
+        </p>
+        <button
+          type="button"
+          onClick={onStart}
+          className="cta-float mt-5 inline-flex min-h-[72px] w-full items-center justify-center gap-3 rounded-full bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 px-5 text-2xl font-black text-white shadow-[0_14px_28px_rgba(249,115,22,0.46),inset_0_2px_0_rgba(255,255,255,0.5)] ring-4 ring-white transition active:translate-y-0.5"
+        >
+          診断をスタートする
+          <ChevronRight className="h-7 w-7" aria-hidden="true" />
+        </button>
+      </div>
+
+      <p className="relative z-10 mt-5 text-center text-sm font-bold text-white">
+        ご登録・ご相談は無料です。お気軽にご利用ください。
+      </p>
+    </section>
+  );
+}
+
+function HeroIllustration() {
+  return (
+    <div className="relative mt-2 min-h-[205px]">
+      <div className="absolute bottom-0 left-[-28px] right-[-28px] h-20 rounded-t-[100%] bg-blue-900/35" />
+      <div className="absolute bottom-2 left-0 h-24 w-60 rounded-lg bg-gradient-to-b from-white to-slate-200 shadow-[0_18px_35px_rgba(2,6,23,0.28)]">
+        <div className="absolute left-6 top-7 h-10 w-20 rounded bg-cyan-100" />
+        <div className="absolute right-5 top-7 h-12 w-20 rounded bg-cyan-100" />
+        <div className="absolute bottom-[-13px] left-9 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
+        <div className="absolute bottom-[-13px] right-12 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
+        <div className="absolute -right-14 bottom-0 h-24 w-20 rounded-r-lg bg-gradient-to-br from-slate-100 to-slate-300" />
+      </div>
+      <div className="absolute bottom-1 right-0 h-44 w-32">
+        <div className="absolute left-8 top-0 h-16 w-16 rounded-full bg-gradient-to-b from-amber-100 to-amber-200 shadow-lg" />
+        <div className="absolute left-5 top-14 h-28 w-24 rounded-t-[2rem] bg-gradient-to-b from-blue-700 to-blue-950 shadow-[0_18px_32px_rgba(2,6,23,0.32)]" />
+        <div className="absolute left-1 top-24 h-10 w-24 -rotate-12 rounded-full bg-blue-900" />
+        <div className="absolute right-0 top-24 h-10 w-24 rotate-12 rounded-full bg-blue-900" />
+        <div className="absolute left-12 top-7 h-2 w-2 rounded-full bg-slate-900" />
+        <div className="absolute left-28 top-7 h-2 w-2 rounded-full bg-slate-900" />
+      </div>
+    </div>
+  );
+}
+
+function ScreenHeader({ currentStep }: { currentStep: number }) {
+  return (
+    <header className="mb-6 flex items-start justify-between gap-3">
+      <LogoMark compact />
+      <FreeBadge compact />
+      <span className="sr-only">{currentStep}/5問</span>
+    </header>
+  );
+}
+
+function StepRail({ step }: { step: number }) {
+  return (
+    <div className="relative mt-5">
+      <div className="absolute left-7 right-7 top-5 h-2 rounded-full bg-slate-200" />
+      <div
+        className="absolute left-7 top-5 h-2 rounded-full bg-gradient-to-r from-orange-400 to-yellow-300 transition-all duration-300"
+        style={{ width: `${Math.max(0, ((step - 1) / 4) * 100)}%` }}
+      />
+      <div className="relative z-10 flex justify-between">
+        {questions.map((question, index) => {
+          const number = index + 1;
+          const active = number === step;
+          const done = number < step;
 
           return (
-            <button
-              key={option.label}
-              type="button"
-              disabled={isAdvancing}
-              onClick={() => onAnswer(question, option)}
+            <span
+              key={question.id}
               className={[
-                "group flex min-h-[60px] w-full items-center gap-3 rounded-lg border px-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition active:translate-y-0.5 disabled:cursor-wait",
-                isSelected
-                  ? "border-orange-300 bg-amber-50 text-blue-950"
-                  : "border-slate-100 bg-gradient-to-r from-white to-sky-50 text-slate-900 hover:border-blue-200",
+                "flex h-11 w-11 items-center justify-center rounded-full text-lg font-black shadow-sm",
+                active
+                  ? "bg-orange-500 text-white"
+                  : done
+                    ? "bg-blue-700 text-white"
+                    : "bg-slate-100 text-slate-400",
               ].join(" ")}
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-lg text-white shadow-[0_10px_18px_rgba(29,78,216,0.22)]">
-                {option.icon}
-              </span>
-              <span className="flex-1 text-base font-black">{option.label}</span>
-              <ChevronRight
-                className="h-5 w-5 text-blue-700 transition group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </button>
+              {number}
+            </span>
           );
         })}
       </div>
-
-      <BackButton canGoBack={canGoBack} onBack={onBack} />
-    </article>
+    </div>
   );
 }
 
-function ContactCard({
-  progress,
+function QuestionScreen({
+  question,
+  step,
+  answers,
+  isAdvancing,
+  onAnswer,
+  onBack,
+}: {
+  question: Question;
+  step: number;
+  answers: Answers;
+  isAdvancing: boolean;
+  onAnswer: (question: Question, option: AnswerOption) => void;
+  onBack: () => void;
+}) {
+  const selectedAnswer = answers[question.id];
+
+  return (
+    <div className="card-in">
+      <section className="overflow-hidden rounded-lg bg-white shadow-[0_22px_50px_rgba(2,6,23,0.3)]">
+        <div className="px-5 pb-5 pt-5">
+          <div className="flex items-center justify-center gap-3 text-blue-800">
+            <span className="h-px w-7 bg-blue-700" />
+            <p className="text-2xl font-black">診断中</p>
+            <span className="h-px w-7 bg-blue-700" />
+            <span className="ml-auto rounded-full bg-blue-800 px-5 py-2 text-lg font-black text-white">
+              {step}/5問
+            </span>
+          </div>
+          <StepRail step={step} />
+        </div>
+
+        <div className="border-t border-slate-100 px-5 pb-5 pt-6">
+          <div className="text-center">
+            <span className="relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-700 text-xl font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.28)]">
+              {question.q}
+              <span className="absolute -right-3 -top-2 text-yellow-300">〟</span>
+            </span>
+            <h2 className="mt-5 text-[1.75rem] font-black leading-[1.4] text-blue-950">
+              {highlightTitle(question.title)}
+            </h2>
+            <div className="mt-4 flex items-center justify-center gap-2 text-blue-900">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-700 text-white">
+                <ClipboardList className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <p className="text-sm font-black">{question.lead}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            {question.options.map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                disabled={isAdvancing}
+                onClick={() => onAnswer(question, option)}
+                className={[
+                  "group flex min-h-[76px] w-full items-center gap-4 rounded-lg border px-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.12)] transition active:translate-y-0.5 disabled:cursor-wait",
+                  selectedAnswer === option.label
+                    ? "border-orange-300 bg-amber-50"
+                    : "border-slate-100 bg-white hover:border-blue-200",
+                ].join(" ")}
+              >
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-4xl">
+                  {option.icon}
+                </span>
+                <span className="flex-1 text-xl font-black leading-8 text-blue-950">{option.label}</span>
+                <ChevronRight className="h-8 w-8 shrink-0 text-blue-700 transition group-hover:translate-x-0.5" />
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 p-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-700 text-yellow-300">
+                <ShieldCheck className="h-8 w-8" aria-hidden="true" />
+              </span>
+              <div className="flex-1">
+                <p className="text-lg font-black text-blue-900">すべての回答は非公開です</p>
+                <p className="text-sm font-bold text-blue-800">安心してご回答ください</p>
+              </div>
+              <LockKeyhole className="h-8 w-8 text-slate-300" aria-hidden="true" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-5 grid grid-cols-[86px_1fr] gap-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex min-h-[70px] flex-col items-center justify-center rounded-full bg-white text-blue-800 shadow-[0_14px_24px_rgba(2,6,23,0.2)]"
+        >
+          <ArrowLeft className="h-6 w-6" aria-hidden="true" />
+          <span className="mt-1 text-sm font-black">戻る</span>
+        </button>
+        <div className="flex min-h-[70px] items-center justify-center rounded-full bg-gradient-to-b from-white to-slate-200 px-5 text-lg font-black text-slate-400 shadow-inner">
+          選択してください
+        </div>
+      </div>
+      <p className="mt-4 text-center text-sm font-bold text-white">
+        選択すると自動で次の質問に進みます
+      </p>
+    </div>
+  );
+}
+
+function highlightTitle(title: string) {
+  if (title.includes("最も近いもの")) {
+    return (
+      <>
+        現在の働き方について、
+        <br />
+        <span className="text-orange-500">最も近いもの</span>はどれですか？
+      </>
+    );
+  }
+
+  return title;
+}
+
+function ContactScreen({
   contact,
   phoneError,
   onBack,
@@ -358,7 +553,6 @@ function ContactCard({
   onPhoneChange,
   onSubmit,
 }: {
-  progress: number;
   contact: { name: string; phone: string };
   phoneError: string;
   onBack: () => void;
@@ -367,162 +561,262 @@ function ContactCard({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <article className="card-in rounded-lg bg-white p-5 shadow-[0_22px_50px_rgba(2,6,23,0.26)]">
-      <CardHeader label="LAST" count="入力" progress={progress} />
-      <div className="mt-5 flex items-start gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white">
-          <PhoneCall className="h-6 w-6" aria-hidden="true" />
-        </span>
-        <div>
-          <h2 className="text-[1.45rem] font-black leading-snug text-slate-950">
-            診断結果を受け取るために、あと少しだけ入力してください
-          </h2>
-          <p className="mt-2 text-sm font-bold leading-6 text-slate-500">
-            かんたん30秒で完了。完全無料・在職中でもOKです。
-          </p>
-        </div>
-      </div>
-
-      <form className="mt-5 space-y-4" onSubmit={onSubmit}>
-        <label className="block space-y-2">
-          <span className="text-sm font-black text-slate-800">お名前</span>
-          <input
-            required
-            value={contact.name}
-            onChange={(event) => onChange({ ...contact, name: event.target.value })}
-            autoComplete="name"
-            placeholder="例：山田 太郎"
-            className="min-h-[56px] w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100"
-          />
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-black text-slate-800">電話番号</span>
-          <input
-            required
-            value={contact.phone}
-            onChange={(event) => {
-              onPhoneChange();
-              onChange({ ...contact, phone: event.target.value });
-            }}
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="例：09012345678"
-            aria-describedby={phoneError ? "phone-error" : undefined}
-            className="min-h-[56px] w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-100"
-          />
-          {phoneError ? (
-            <span id="phone-error" className="block text-sm font-bold text-red-600">
-              {phoneError}
+    <div className="card-in">
+      <section className="overflow-hidden rounded-lg bg-white shadow-[0_22px_50px_rgba(2,6,23,0.3)]">
+        <div className="px-5 pb-5 pt-5">
+          <div className="flex items-center justify-center gap-3 text-blue-800">
+            <span className="h-px w-7 bg-blue-700" />
+            <p className="text-2xl font-black">診断中</p>
+            <span className="h-px w-7 bg-blue-700" />
+            <span className="ml-auto rounded-full bg-blue-800 px-5 py-2 text-lg font-black text-white">
+              5/5問
             </span>
-          ) : null}
-        </label>
-
-        <div className="rounded-lg bg-blue-50 p-3 text-xs font-bold leading-6 text-slate-600">
-          入力情報は求人紹介・条件確認・連絡対応の目的で利用します。
-          <a href="#terms" className="text-blue-800 underline underline-offset-2">
-            利用規約
-          </a>
-          ・
-          <a href="#privacy" className="text-blue-800 underline underline-offset-2">
-            プライバシーポリシー
-          </a>
-          に同意のうえ送信してください。
+          </div>
+          <StepRail step={5} />
         </div>
 
-        <button
-          type="submit"
-          className="inline-flex min-h-[58px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-300 px-5 text-base font-black text-blue-950 shadow-[0_14px_30px_rgba(249,115,22,0.34)] transition active:translate-y-0.5"
-        >
-          診断結果を受け取る
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
-        </button>
-      </form>
+        <form className="border-t border-slate-100 px-5 pb-6 pt-7" onSubmit={onSubmit}>
+          <div className="text-center">
+            <p className="text-3xl font-black leading-snug text-blue-950">あと少しで診断完了です！</p>
+            <p className="mt-3 text-lg font-black leading-8 text-blue-950">
+              あなたにピッタリの求人をお届けするために
+              <br />
+              <span className="text-orange-500">お名前とお電話番号</span>をご入力ください
+            </p>
+          </div>
 
-      <BackButton canGoBack onBack={onBack} />
-    </article>
-  );
-}
+          <div className="mt-7 space-y-5">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xl font-black text-blue-950">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-700 text-white">
+                  <UserRound className="h-5 w-5" aria-hidden="true" />
+                </span>
+                お名前
+                <span className="rounded-md bg-red-500 px-2 py-1 text-sm text-white">必須</span>
+              </span>
+              <input
+                required
+                value={contact.name}
+                onChange={(event) => onChange({ ...contact, name: event.target.value })}
+                autoComplete="name"
+                placeholder="例）山田 太郎"
+                className="min-h-[68px] w-full rounded-lg border-2 border-slate-200 bg-white px-4 text-xl font-bold outline-none transition placeholder:text-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              />
+            </label>
 
-function ThanksCard() {
-  return (
-    <article className="card-in rounded-lg bg-white p-6 text-center shadow-[0_22px_50px_rgba(2,6,23,0.26)]">
-      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-blue-700 to-cyan-500 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]">
-        <CheckCircle2 className="h-9 w-9" aria-hidden="true" />
-      </span>
-      <p className="mt-5 text-2xl font-black text-blue-950">送信ありがとうございました</p>
-      <p className="mt-3 text-base font-bold leading-8 text-slate-600">
-        担当者よりご連絡いたします。入力いただいた条件をもとに、希望に近い求人をご案内します。
-      </p>
-      <div className="mt-5 rounded-lg bg-blue-50 p-3 text-sm font-black text-blue-800">
-        完全無料・在職中でも相談OK
-      </div>
-    </article>
-  );
-}
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xl font-black text-blue-950">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-700 text-white">
+                  <PhoneCall className="h-5 w-5" aria-hidden="true" />
+                </span>
+                電話番号
+                <span className="rounded-md bg-red-500 px-2 py-1 text-sm text-white">必須</span>
+              </span>
+              <input
+                required
+                value={contact.phone}
+                onChange={(event) => {
+                  onPhoneChange();
+                  onChange({ ...contact, phone: event.target.value });
+                }}
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="例）090-1234-5678"
+                aria-describedby={phoneError ? "phone-error" : undefined}
+                className="min-h-[68px] w-full rounded-lg border-2 border-slate-200 bg-white px-4 text-xl font-bold outline-none transition placeholder:text-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              />
+              {phoneError ? (
+                <span id="phone-error" className="mt-2 block text-sm font-bold text-red-600">
+                  {phoneError}
+                </span>
+              ) : null}
+            </label>
+          </div>
 
-function CardHeader({ label, count, progress }: { label: string; count: string; progress: number }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="rounded-lg bg-blue-700 px-3 py-1 text-xs font-black text-white">
-          {label}
-        </span>
-        <span className="text-xs font-black text-slate-500">{count}</span>
+          <div className="mt-5 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 p-4">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-10 w-10 shrink-0 text-blue-700" aria-hidden="true" />
+              <p className="text-sm font-black leading-6 text-blue-950">
+                ご入力いただいた電話番号へ、求人のご案内や条件に合う情報をお届けします
+                （無理な営業は一切いたしません）
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-lg bg-blue-50 p-4">
+            <div className="flex items-start gap-3">
+              <LockKeyhole className="mt-1 h-7 w-7 shrink-0 text-blue-700" aria-hidden="true" />
+              <p className="text-sm font-bold leading-6 text-blue-950">
+                ご入力いただいた個人情報は、プライバシーポリシーに基づき厳重に管理いたします。
+                <a href="#privacy" className="text-blue-700 underline underline-offset-2">
+                  プライバシーポリシー
+                </a>
+                に同意の上、ご利用ください。
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="mt-6 inline-flex min-h-[76px] w-full items-center justify-center gap-3 rounded-full bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 px-5 text-2xl font-black text-white shadow-[0_14px_28px_rgba(249,115,22,0.46),inset_0_2px_0_rgba(255,255,255,0.5)] ring-4 ring-white transition active:translate-y-0.5"
+          >
+            無料で求人を受け取る
+            <ChevronRight className="h-8 w-8" aria-hidden="true" />
+          </button>
+
+          <p className="mt-4 text-center text-lg font-black text-blue-950">
+            <CheckCircle2 className="mr-2 inline h-6 w-6 text-blue-700" aria-hidden="true" />
+            たった<span className="text-3xl text-orange-500">1</span>分で完了！ 完全無料です
+          </p>
+        </form>
+      </section>
+
+      <div className="mt-6 text-center text-white">
+        <p className="text-2xl font-black">＼ 安心してご利用いただけます ／</p>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <TrustTile icon={<ShieldCheck className="h-9 w-9" />} title="完全無料" text="費用は一切かかりません" />
+          <TrustTile icon={<Headphones className="h-9 w-9" />} title="サポート充実" text="専任アドバイザーが対応" />
+          <TrustTile icon={<LockKeyhole className="h-9 w-9" />} title="情報は厳守" text="第三者に開示しません" />
+        </div>
+        <p className="mt-5 text-sm font-bold leading-6">
+          ご登録後、担当者よりお電話またはSMSにてご連絡いたします。
+          <br />
+          ご都合が合わない場合はいつでも停止できます。
+        </p>
       </div>
-      <div className="mt-3 h-3 overflow-hidden rounded-lg bg-slate-100">
-        <div
-          className="h-full rounded-lg bg-gradient-to-r from-orange-500 via-yellow-300 to-cyan-400 transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-blue-800 shadow-[0_12px_24px_rgba(2,6,23,0.2)]"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        戻る
+      </button>
     </div>
   );
 }
 
-function BackButton({ canGoBack, onBack }: { canGoBack: boolean; onBack: () => void }) {
-  return canGoBack ? (
-    <button
-      type="button"
-      onClick={onBack}
-      className="mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 shadow-sm transition active:translate-y-0.5"
-    >
-      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-      戻る
-    </button>
-  ) : (
-    <div className="mt-5 flex items-center gap-2 text-xs font-bold text-slate-400">
-      <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-      回答内容はあとから確認できます
+function TrustTile({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <div className="rounded-lg bg-white p-3 text-center text-blue-950 shadow-[0_12px_24px_rgba(2,6,23,0.22)]">
+      <div className="mx-auto flex h-11 w-11 items-center justify-center text-blue-700">{icon}</div>
+      <p className="mt-2 text-base font-black">{title}</p>
+      <p className="mt-1 text-[11px] font-bold leading-4">{text}</p>
+    </div>
+  );
+}
+
+function ThanksScreen() {
+  return (
+    <section className="card-in overflow-hidden rounded-[2.3rem] bg-white text-center shadow-[0_22px_50px_rgba(2,6,23,0.3)]">
+      <div className="relative px-6 pb-6 pt-8">
+        <div className="absolute left-0 right-0 top-0 h-20 rounded-b-[100%] bg-blue-50" />
+        <div className="relative">
+          <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-blue-700 shadow-[0_14px_26px_rgba(37,99,235,0.2)] ring-8 ring-blue-50">
+            <Check className="h-12 w-12" aria-hidden="true" />
+          </span>
+          <p className="mt-6 text-2xl font-black text-blue-950">ご登録ありがとうございます！</p>
+          <h2 className="mt-2 text-4xl font-black text-blue-950">
+            <span className="text-orange-500">受付が完了</span>しました
+          </h2>
+          <div className="mx-auto mt-5 h-1 w-full max-w-xs rounded-full bg-[repeating-linear-gradient(90deg,#60a5fa_0_5px,transparent_5px_12px)]" />
+          <p className="mt-5 text-lg font-black leading-8 text-blue-950">
+            ご入力いただいた内容をもとに、
+            <br />
+            あなたにピッタリの求人をご提案いたします。
+          </p>
+          <p className="mt-2 text-base font-black leading-7 text-blue-950">
+            担当者より、<span className="text-orange-500">お電話またはSMS</span>にてご連絡いたします。
+          </p>
+        </div>
+
+        <div className="mt-7 rounded-lg bg-blue-50 p-4 text-left shadow-inner">
+          <div className="grid grid-cols-[76px_1fr] items-center gap-4">
+            <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-blue-200 bg-white text-blue-700">
+              <PhoneCall className="h-11 w-11" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-lg font-black text-blue-950">ご連絡の目安</p>
+              <p className="mt-1 text-2xl font-black text-blue-950">
+                最短<span className="text-4xl text-orange-500">30分以内</span>にご連絡します
+              </p>
+              <p className="mt-1 text-xs font-bold leading-5 text-blue-900">
+                営業時間内でのご連絡となります。状況によりお時間をいただく場合がございます。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-7 rounded-lg bg-gradient-to-b from-sky-50 to-white p-4">
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <span className="h-px w-12 bg-blue-500" />
+            <p className="text-2xl font-black text-blue-950">今後の流れ</p>
+            <span className="h-px w-12 bg-blue-500" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-blue-950">
+            <FlowStep number="1" icon={<PhoneCall className="h-8 w-8" />} title="担当者からご連絡" />
+            <FlowStep number="2" icon={<ClipboardList className="h-8 w-8" />} title="ご希望のヒアリング" />
+            <FlowStep number="3" icon={<Truck className="h-8 w-8" />} title="求人をご提案" />
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-lg bg-yellow-50 p-4 text-left">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-10 w-10 shrink-0 text-blue-700" aria-hidden="true" />
+            <p className="text-sm font-black leading-6 text-blue-950">
+              ご登録いただいた情報は厳重に管理します。プライバシーポリシーに基づき、第三者に開示することはありません。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-blue-950 px-5 py-5 text-white">
+        <p className="text-base font-black">この画面は閉じても問題ありません</p>
+      </div>
+    </section>
+  );
+}
+
+function FlowStep({ number, icon, title }: { number: string; icon: ReactNode; title: string }) {
+  return (
+    <div className="relative rounded-lg bg-white p-3 text-center shadow-sm">
+      <span className="absolute -left-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-800 text-sm font-black text-white">
+        {number}
+      </span>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+        {icon}
+      </div>
+      <p className="mt-2 text-sm font-black leading-5">{title}</p>
     </div>
   );
 }
 
 function CompactFooter() {
   return (
-    <footer className="relative space-y-4 bg-slate-950 px-5 pb-28 pt-6 text-xs leading-6 text-slate-400">
+    <footer className="relative space-y-4 px-5 pb-8 pt-6 text-xs leading-6 text-white/80">
       <div className="flex items-center gap-2 text-white">
         <UserRound className="h-4 w-4" aria-hidden="true" />
         <p className="font-black">{config.operatorName}</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 font-bold text-slate-200">
-        <a id="terms" href="#terms" className="rounded-lg bg-white/5 px-3 py-2">
+      <div className="grid grid-cols-2 gap-2 font-bold text-white">
+        <a id="terms" href="#terms" className="rounded-lg bg-white/10 px-3 py-2">
           利用規約
         </a>
-        <a id="privacy" href="#privacy" className="rounded-lg bg-white/5 px-3 py-2">
+        <a id="privacy" href="#privacy" className="rounded-lg bg-white/10 px-3 py-2">
           プライバシーポリシー
         </a>
-        <a href={`mailto:${config.contactEmail}`} className="rounded-lg bg-white/5 px-3 py-2">
+        <a href={`mailto:${config.contactEmail}`} className="rounded-lg bg-white/10 px-3 py-2">
           お問い合わせ
         </a>
-        <span className="rounded-lg bg-white/5 px-3 py-2">運営会社</span>
+        <span className="rounded-lg bg-white/10 px-3 py-2">運営会社</span>
       </div>
       <div className="space-y-1">
         <p>運営会社：{config.companyName}</p>
         <p>{config.licenseNumber}</p>
         <p>所在地：{config.address}</p>
       </div>
-      <p className="text-center text-slate-500">© {config.serviceName}</p>
+      <p className="text-center text-white/60">© {config.serviceName}</p>
     </footer>
   );
 }
