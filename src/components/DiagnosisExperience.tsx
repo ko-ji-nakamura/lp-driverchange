@@ -188,7 +188,7 @@ export function DiagnosisExperience() {
   }
 
   return (
-    <main className="relative mx-auto min-h-screen max-w-[460px] overflow-hidden bg-blue-950 text-slate-950 shadow-soft">
+    <main className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden bg-blue-950 text-slate-950 shadow-soft">
       <BackgroundDecor />
 
       {currentStep === 0 ? <HeroScreen onStart={startDiagnosis} /> : null}
@@ -288,92 +288,105 @@ function FreeBadge({ compact = false }: { compact?: boolean }) {
 
 function HeroScreen({ onStart }: { onStart: () => void }) {
   return (
-    <section className="relative px-5 pb-7 pt-6 text-white">
-      <div className="flex items-start justify-between gap-3">
+    <section className="relative max-h-[844px] overflow-hidden bg-[linear-gradient(180deg,#063B8E_0%,#0EA5E9_100%)] px-4 pb-5 pt-6 text-white">
+      <HeroDecorations />
+
+      <div className="relative z-10">
         <LogoMark />
-        <div className="hidden min-[390px]:block">
-          <FreeBadge compact />
-        </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-[1fr_auto] items-start gap-3">
-        <div className="relative rounded-lg bg-white px-4 py-3 text-blue-950 shadow-[0_14px_28px_rgba(2,6,23,0.26)]">
-          <div className="absolute -bottom-3 left-12 h-6 w-6 rotate-45 bg-white" />
-          <p className="relative text-xl font-black">
-            <span className="text-4xl text-orange-500">5</span>つの質問でわかる！
-          </p>
+      <div className="relative z-10 mt-5">
+        <div className="relative inline-flex -rotate-3 rounded-[18px] bg-white px-4 py-2 text-blue-950 shadow-[0_12px_22px_rgba(2,6,23,0.24)]">
+          <span className="absolute -bottom-2 left-12 h-4 w-4 rotate-45 bg-white" />
+          <span className="relative text-[18px] font-black">
+            <span className="text-[32px] leading-none text-[#FF8A00]">5</span>?????????
+          </span>
         </div>
-        <div className="min-[390px]:hidden">
-          <FreeBadge compact />
-        </div>
-      </div>
 
-      <div className="relative mt-7">
-        <p className="text-[2.1rem] font-black leading-[1.05] text-white drop-shadow-[0_5px_0_rgba(2,24,87,0.55)]">
-          あなたにピッタリの
-        </p>
-        <h1 className="mt-1 text-[4.1rem] font-black leading-[0.95] text-yellow-300 drop-shadow-[0_8px_0_rgba(2,24,87,0.55)]">
-          ドライバー
+        <h1 className="mt-5 text-[32px] font-black leading-[1.2] drop-shadow-[0_4px_0_rgba(2,24,87,0.45)]">
+          ?????????
+          <br />
+          <span className="text-[32px] leading-[1.2] text-yellow-300">?????</span>
+          <br />
+          <span className="text-[32px] leading-[1.2]">????</span>
         </h1>
-        <p className="mt-2 text-[3.4rem] font-black leading-none text-white drop-shadow-[0_8px_0_rgba(2,24,87,0.55)]">
-          求人診断
+
+        <p className="mt-3 max-w-[210px] text-[15px] font-black leading-[1.6]">
+          ???OK??????????????
+          <span className="text-yellow-300">????????</span>????????
         </p>
       </div>
 
       <HeroIllustration />
 
-      <div className="relative z-10 mt-3 grid grid-cols-3 gap-2">
+      <div className="relative z-20 mt-1 grid grid-cols-3 gap-2">
         {heroBadges.map(({ title, text, icon: Icon }) => (
           <div
             key={title}
-            className="rounded-full border-4 border-yellow-400 bg-white px-2 py-3 text-center text-blue-950 shadow-[0_14px_24px_rgba(2,6,23,0.25)]"
+            className="flex aspect-square flex-col items-center justify-center rounded-full border-[3px] border-yellow-300 bg-gradient-to-b from-white to-yellow-50 px-2 text-center text-blue-950 shadow-[0_12px_22px_rgba(2,6,23,0.24)]"
           >
-            <Icon className="mx-auto h-8 w-8 text-blue-700" aria-hidden="true" />
-            <p className="mt-2 text-sm font-black leading-5">{title}</p>
-            <p className="mt-1 text-[11px] font-black leading-4 text-blue-800">{text}</p>
+            <Icon className="h-7 w-7 text-blue-700" aria-hidden="true" />
+            <p className="mt-1 text-[13px] font-black leading-[1.25]">{title}</p>
+            <p className="mt-0.5 text-[10px] font-black leading-[1.25] text-blue-800">{text}</p>
           </div>
         ))}
       </div>
 
-      <div className="relative z-10 mt-6 rounded-lg bg-white p-5 text-center shadow-[0_20px_44px_rgba(2,6,23,0.28)]">
-        <p className="text-2xl font-black text-blue-950">
-          ＼ かんたん<span className="text-4xl text-orange-500">1分</span>で完了！ ／
+      <div className="relative z-20 mt-3 rounded-[28px] bg-white px-4 py-5 text-center shadow-[0_18px_40px_rgba(2,6,23,0.26)]">
+        <p className="text-[24px] font-black leading-[1.2] text-blue-950">
+          ? ????<span className="text-[34px] text-[#FF8A00]">1?</span>???? ?
         </p>
         <button
           type="button"
           onClick={onStart}
-          className="cta-float mt-5 inline-flex min-h-[72px] w-full items-center justify-center gap-3 rounded-full bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 px-5 text-2xl font-black text-white shadow-[0_14px_28px_rgba(249,115,22,0.46),inset_0_2px_0_rgba(255,255,255,0.5)] ring-4 ring-white transition active:translate-y-0.5"
+          className="cta-float mt-4 inline-flex h-16 w-full items-center justify-center gap-3 rounded-full bg-[linear-gradient(90deg,#FF8A00_0%,#FFD84D_100%)] px-5 text-[24px] font-black text-white shadow-[0_12px_26px_rgba(255,138,0,0.42),inset_0_2px_0_rgba(255,255,255,0.45)] ring-4 ring-white transition active:translate-y-0.5"
         >
-          診断をスタートする
+          ?????????
           <ChevronRight className="h-7 w-7" aria-hidden="true" />
         </button>
       </div>
 
-      <p className="relative z-10 mt-5 text-center text-sm font-bold text-white">
-        ご登録・ご相談は無料です。お気軽にご利用ください。
+      <p className="relative z-20 mt-3 text-center text-[13px] font-bold leading-[1.6] text-white">
+        ?????????????????????????
       </p>
     </section>
   );
 }
 
+function HeroDecorations() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute right-[-90px] top-[-24px] h-24 w-[360px] rotate-[-46deg] bg-white/18 blur-sm" />
+      <div className="absolute right-[-80px] top-14 h-10 w-[300px] rotate-[-46deg] bg-cyan-200/28" />
+      <div className="absolute right-2 top-20 h-36 w-36 rounded-full bg-cyan-300/20 blur-2xl" />
+      <div className="absolute right-0 top-16 h-56 w-36 opacity-35 [background-image:radial-gradient(rgba(255,255,255,0.72)_1.5px,transparent_1.5px)] [background-size:10px_10px]" />
+      <div className="absolute left-[-60px] bottom-32 h-24 w-[270px] rotate-[-20deg] rounded-full bg-blue-950/25" />
+      <div className="absolute left-5 top-28 text-xl text-white">?</div>
+      <div className="absolute right-8 top-28 text-base text-yellow-300">?</div>
+      <div className="absolute right-11 top-52 text-2xl text-white">?</div>
+      <div className="absolute left-8 top-64 text-sm text-yellow-200">?</div>
+    </div>
+  );
+}
+
 function HeroIllustration() {
   return (
-    <div className="relative mt-2 min-h-[205px]">
-      <div className="absolute bottom-0 left-[-28px] right-[-28px] h-20 rounded-t-[100%] bg-blue-900/35" />
-      <div className="absolute bottom-2 left-0 h-24 w-60 rounded-lg bg-gradient-to-b from-white to-slate-200 shadow-[0_18px_35px_rgba(2,6,23,0.28)]">
-        <div className="absolute left-6 top-7 h-10 w-20 rounded bg-cyan-100" />
-        <div className="absolute right-5 top-7 h-12 w-20 rounded bg-cyan-100" />
-        <div className="absolute bottom-[-13px] left-9 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
-        <div className="absolute bottom-[-13px] right-12 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
-        <div className="absolute -right-14 bottom-0 h-24 w-20 rounded-r-lg bg-gradient-to-br from-slate-100 to-slate-300" />
+    <div className="relative z-10 -mt-16 h-[204px]">
+      <div className="absolute bottom-0 left-[-18px] right-[-18px] h-20 rounded-t-[100%] bg-blue-900/35" />
+      <div className="absolute bottom-10 left-8 h-[82px] w-[198px] rounded-lg bg-gradient-to-b from-white to-slate-200 shadow-[0_18px_35px_rgba(2,6,23,0.26)]">
+        <div className="absolute -right-10 bottom-0 h-[82px] w-[62px] rounded-r-lg bg-gradient-to-br from-slate-100 to-slate-300" />
+        <div className="absolute left-5 top-7 h-9 w-16 rounded bg-cyan-100" />
+        <div className="absolute right-5 top-7 h-10 w-16 rounded bg-cyan-100" />
+        <div className="absolute bottom-[-12px] left-8 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
+        <div className="absolute bottom-[-12px] right-10 h-8 w-8 rounded-full border-4 border-slate-800 bg-slate-500" />
       </div>
-      <div className="absolute bottom-1 right-0 h-44 w-32">
+      <div className="absolute bottom-6 right-0 h-[150px] w-[112px]">
         <div className="absolute left-8 top-0 h-16 w-16 rounded-full bg-gradient-to-b from-amber-100 to-amber-200 shadow-lg" />
-        <div className="absolute left-5 top-14 h-28 w-24 rounded-t-[2rem] bg-gradient-to-b from-blue-700 to-blue-950 shadow-[0_18px_32px_rgba(2,6,23,0.32)]" />
-        <div className="absolute left-1 top-24 h-10 w-24 -rotate-12 rounded-full bg-blue-900" />
-        <div className="absolute right-0 top-24 h-10 w-24 rotate-12 rounded-full bg-blue-900" />
+        <div className="absolute left-5 top-14 h-24 w-[88px] rounded-t-[2rem] bg-gradient-to-b from-blue-700 to-blue-950 shadow-[0_18px_32px_rgba(2,6,23,0.32)]" />
+        <div className="absolute left-0 top-[92px] h-8 w-[88px] -rotate-12 rounded-full bg-blue-900" />
+        <div className="absolute right-[-6px] top-[92px] h-8 w-[88px] rotate-12 rounded-full bg-blue-900" />
         <div className="absolute left-12 top-7 h-2 w-2 rounded-full bg-slate-900" />
-        <div className="absolute left-28 top-7 h-2 w-2 rounded-full bg-slate-900" />
+        <div className="absolute left-[78px] top-7 h-2 w-2 rounded-full bg-slate-900" />
       </div>
     </div>
   );
