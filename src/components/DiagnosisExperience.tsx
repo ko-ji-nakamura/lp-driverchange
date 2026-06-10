@@ -318,6 +318,7 @@ export function DiagnosisExperience() {
                 inputMode="numeric"
                 autoComplete="postal-code"
                 value={answers.postalCode ?? ""}
+                hidePrintedPlaceholder
                 onChange={(value) => setTextAnswer("postalCode", value)}
               />
               <OverlayInput
@@ -325,6 +326,7 @@ export function DiagnosisExperience() {
                 className="left-[7.1%] top-[44.1%] h-[8.1%] w-[85.8%]"
                 autoComplete="name"
                 value={answers.name ?? ""}
+                hidePrintedPlaceholder
                 onChange={(value) => setTextAnswer("name", value)}
               />
               <OverlayInput
@@ -353,6 +355,7 @@ export function DiagnosisExperience() {
                 inputMode="tel"
                 autoComplete="tel"
                 value={answers.phone ?? ""}
+                hidePrintedPlaceholder
                 onChange={(value) => setTextAnswer("phone", value)}
               />
               {jobStatusOptions.map((option) => (
@@ -453,7 +456,9 @@ function BackButton({ onClick }: { onClick: () => void }) {
       type="button"
       aria-label="前のページへ戻る"
       onClick={onClick}
-      className="absolute left-0 top-0 h-[10%] w-[20%] rounded-br-xl bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-    />
+      className="absolute right-[4%] top-[7.8%] z-10 inline-flex h-[5.2%] min-h-7 w-[18%] min-w-[64px] items-center justify-center rounded-full border border-blue-200 bg-white/95 text-[13px] font-bold text-blue-700 shadow-[0_6px_14px_rgba(15,23,42,0.18)] outline-none transition active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+    >
+      戻る
+    </button>
   );
 }
